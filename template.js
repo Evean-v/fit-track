@@ -1,55 +1,9 @@
-﻿// ===== 弹窗手势关闭（左右滑动 + 点击遮罩） =====
+﻿// ===== 弹窗：点击遮罩背景关闭 =====
 function setupModalDismiss(overlay) {
-  let startX = 0, isDragging = false, modal = null;
-
-  overlay.addEventListener('click', (e) => {
+  overlay.addEventListener("click", (e) => {
     if (e.target === overlay) TemplateView.closeModal();
   });
-
-  overlay.addEventListener('touchstart', (e) => {
-    modal = overlay.querySelector('.modal');
-    if (!modal) return;
-    startX = e.touches[0].clientX;
-    isDragging = true;
-    modal.style.transition = 'none';
-    modal.style.willChange = 'transform, opacity';
-  }, { passive: true });
-
-  
-  overlay.addEventListener('touchmove', (e) => {
-    if (!isDragging || !modal) return;
-    const deltaX = e.touches[0].clientX - startX;
-    const translateX = deltaX > 0 ? deltaX * 0.4 : deltaX * 0.5;
-    modal.style.transform = 'translateX(' + translateX + 'px)';
-    modal.style.opacity = Math.max(0.3, 1 - Math.abs(deltaX) / 300);
-  }, { passive: true });
-
-  
-  overlay.addEventListener('touchend', (e) => {
-    if (!isDragging || !modal) return;
-    isDragging = false;
-    const deltaX = e.changedTouches[0].clientX - startX;
-    modal.style.willChange = '';
-    modal.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
-
-    if (Math.abs(deltaX) > 80) {
-      modal.style.transform = deltaX > 0 ? 'translateX(100%)' : 'translateX(-100%)';
-      modal.style.opacity = '0';
-      setTimeout(() => {
-        TemplateView.closeModal();
-        modal.style.transform = '';
-        modal.style.opacity = '';
-        modal.style.transition = '';
-      }, 200);
-    } else {
-      // 未超过阈值，弹回原位
-      modal.style.transform = 'translateX(0)';
-      modal.style.opacity = '1';
-      setTimeout(() => { modal.style.transform = ''; modal.style.opacity = ''; modal.style.transition = ''; }, 250);
-    }
-  }, { passive: true });
 }
-
 // ===== Template 视图 =====
 const TemplateView = {
   currentTab: 'templates',
@@ -332,6 +286,8 @@ const ExerciseBrowser = {
     }
   }
 };
+
+
 
 
 
