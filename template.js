@@ -1,4 +1,59 @@
-﻿// ===== Template 视图 =====
+﻿// ===== 弹窗手势关闭（上下滑动 + 点击遮罩） =====
+function setupModalDismiss(overlay) {
+  let startY = 0, isDragging = false, modal = null;
+
+  // 点击遮罩背景关闭
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) TemplateView.closeModal();
+  });
+
+  // 触摸开始
+  overlay.addEventListener('touchstart', (e) => {
+    modal = overlay.querySelector('.modal');
+    if (!modal) return;
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    modal.style.transition = 'none';
+    modal.style.willChange = 'transform, opacity';
+  }, { passive: true });
+
+  // 触摸滑动
+  overlay.addEventListener('touchmove', (e) => {
+    if (!isDragging || !modal) return;
+    const deltaY = e.touches[0].clientY - startY;
+    const translateY = deltaY > 0 ? deltaY * 0.4 : deltaY * 0.5;
+    modal.style.transform = 'translateY(' + translateY + 'px)';
+    modal.style.opacity = Math.max(0.3, 1 - Math.abs(deltaY) / 300);
+  }, { passive: true });
+
+  // 触摸结束
+  overlay.addEventListener('touchend', (e) => {
+    if (!isDragging || !modal) return;
+    isDragging = false;
+    const deltaY = e.changedTouches[0].clientY - startY;
+    modal.style.willChange = '';
+    modal.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+
+    if (Math.abs(deltaY) > 80) {
+      // 超过阈值，关闭弹窗
+      modal.style.transform = deltaY > 0 ? 'translateY(100%)' : 'translateY(-100%)';
+      modal.style.opacity = '0';
+      setTimeout(() => {
+        TemplateView.closeModal();
+        modal.style.transform = '';
+        modal.style.opacity = '';
+        modal.style.transition = '';
+      }, 200);
+    } else {
+      // 未超过阈值，弹回原位
+      modal.style.transform = 'translateY(0)';
+      modal.style.opacity = '1';
+      setTimeout(() => { modal.style.transform = ''; modal.style.opacity = ''; modal.style.transition = ''; }, 250);
+    }
+  }, { passive: true });
+}
+
+// ===== Template 视图 =====
 const TemplateView = {
   currentTab: 'templates',
   editingTemplate: null,
@@ -88,11 +143,11 @@ const TemplateView = {
       <div class="modal">
         <div class="modal-title">${escHtml(title)}</div>
         <div class="modal-body" id="modal-body">
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:12px">
             <label class="form-label">模版名称</label>
             <input class="form-input" id="tpl-name" value="${escHtml(name)}" placeholder="例如：推拉腿" autocomplete="off">
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:0">
             <label class="form-label">选择动作</label>
             <div id="tpl-exercise-list"></div>
           </div>
@@ -104,8 +159,12 @@ const TemplateView = {
       </div>`;
     overlay.classList.add('open');
 
-    document.getElementById('modal-cancel').addEventListener('click', () => this.closeModal());
-    document.getElementById('modal-save').addEventListener('click', () => this.saveTemplate());
+    document.getElementById('modal-cancel').onclick = () => this.closeModal();
+    document.getElementById('modal-save').onclick = () => this.saveTemplate();
+
+    // 设置手势关闭
+    setupModalDismiss(overlay);
+
     this.renderExercisesSelector();
   },
 
@@ -126,11 +185,11 @@ const TemplateView = {
     if (all.length === 0) { el.innerHTML = '<p style="color:var(--text-secondary);padding:8px;">暂无动作，请先在动作库中添加</p>'; return; }
     el.innerHTML = all.map(ex => {
       const checked = this.selectedExercises.has(ex.id) ? 'checked' : '';
-      return `<label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);cursor:pointer;">
-        <input type="checkbox" ${checked} value="${ex.id}" style="width:18px;height:18px;accent-color:var(--primary)">
-        <span style="flex:1;font-size:14px">${escHtml(ex.name)}</span>
-        <span class="badge badge-sm">${escHtml(ex.muscleGroup)}</span>
-      </label>`;
+      return '<label style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid var(--border);cursor:pointer;">'
+        + '<input type="checkbox" ' + checked + ' value="' + ex.id + '" style="width:18px;height:18px;accent-color:var(--primary)">'
+        + '<span style="flex:1;font-size:14px">' + escHtml(ex.name) + '</span>'
+        + '<span class="badge badge-sm">' + escHtml(ex.muscleGroup) + '</span>'
+        + '</label>';
     }).join('');
     el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
       cb.addEventListener('change', () => {
@@ -176,7 +235,7 @@ const ExerciseBrowser = {
     const el = document.getElementById('template-content');
     el.innerHTML = `
       <div class="filter-tabs" id="ex-group-tabs" style="padding-top:0">
-        ${MUSCLE_GROUPS.map(g => `<button class="filter-tab" data-group="${g}">${g}</button>`).join('')}
+        ${MUSCLE_GROUPS.map(g => '<button class="filter-tab" data-group="' + g + '">' + g + '</button>').join('')}
       </div>
       <div id="ex-list" style="flex:1;overflow-y:auto"></div>
     `;
@@ -196,22 +255,16 @@ const ExerciseBrowser = {
     const el = document.getElementById('ex-list');
     const exercises = await getExercisesByGroup(this.currentGroup);
     if (exercises.length === 0) {
-      el.innerHTML = `<div class="empty-state"><p>没有找到动作</p></div>`;
+      el.innerHTML = '<div class="empty-state"><p>没有找到动作</p></div>';
       return;
     }
-    el.innerHTML = '<div class="list">' + exercises.map(ex => `
-      <div class="list-item">
-        <div class="list-item-left">
-          <div class="list-item-title">${escHtml(ex.name)}</div>
-          <div class="list-item-sub">${escHtml(ex.muscleGroup)}${ex.isCustom ? ' · 自定义' : ''}</div>
-        </div>
-        ${ex.isCustom ? `
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-sm btn-outline btn-edit-ex" data-ex-id="${ex.id}">编辑</button>
-          <button class="btn btn-sm btn-danger btn-del-ex" data-ex-id="${ex.id}">删除</button>
-        </div>` : ''}
-      </div>
-    `).join('') + '</div>';
+    el.innerHTML = '<div class="list">' + exercises.map(ex => {
+      var html = '<div class="list-item"><div class="list-item-left"><div class="list-item-title">' + escHtml(ex.name) + '</div><div class="list-item-sub">' + escHtml(ex.muscleGroup) + (ex.isCustom ? ' · 自定义' : '') + '</div></div>';
+      if (ex.isCustom) {
+        html += '<div style="display:flex;gap:6px"><button class="btn btn-sm btn-outline btn-edit-ex" data-ex-id="' + ex.id + '">编辑</button><button class="btn btn-sm btn-danger btn-del-ex" data-ex-id="' + ex.id + '">删除</button></div>';
+      }
+      return html + '</div>';
+    }).join('') + '</div>';
 
     el.querySelectorAll('.btn-edit-ex').forEach(btn => {
       btn.addEventListener('click', () => this.editCustom(btn.dataset.exId));
@@ -220,7 +273,7 @@ const ExerciseBrowser = {
       btn.addEventListener('click', () => this.deleteCustom(btn.dataset.exId));
     });
 
-    const addBtn = document.createElement('div');
+    var addBtn = document.createElement('div');
     addBtn.style.cssText = 'padding:0 16px 16px';
     addBtn.innerHTML = '<button class="btn btn-block btn-outline btn-lg" id="btn-add-exercise"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 添加自定义动作</button>';
     el.appendChild(addBtn);
@@ -232,47 +285,39 @@ const ExerciseBrowser = {
   },
 
   async editCustom(id) {
-    const ex = await dbGet('exercises', id);
+    var ex = await dbGet('exercises', id);
     if (!ex) return;
     this.showExerciseModal('编辑动作', ex.name, ex.muscleGroup, id);
   },
 
   showExerciseModal(title, name, group, editId) {
-    const overlay = document.getElementById('modal-template');
-    overlay.innerHTML = `
-      <div class="modal">
-        <div class="modal-title">${escHtml(title)}</div>
-        <div class="modal-body" id="modal-body">
-          <div class="form-group">
-            <label class="form-label">动作名称</label>
-            <input class="form-input" id="ex-name" value="${escHtml(name)}" placeholder="例如：深蹲" autocomplete="off">
-          </div>
-          <div class="form-group">
-            <label class="form-label">肌群</label>
-            <select class="form-input" id="ex-group" style="appearance:auto">
-              ${MUSCLE_GROUPS.filter(g => g !== '全部').map(g => `<option value="${g}" ${g === group ? 'selected' : ''}>${g}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-outline" id="modal-cancel">取消</button>
-          <button class="btn btn-primary" id="modal-save">保存</button>
-        </div>
-      </div>`;
+    var overlay = document.getElementById('modal-template');
+    overlay.innerHTML = ''
+      + '<div class="modal">'
+      + '<div class="modal-title">' + escHtml(title) + '</div>'
+      + '<div class="modal-body" id="modal-body">'
+      + '<div class="form-group"><label class="form-label">动作名称</label><input class="form-input" id="ex-name" value="' + escHtml(name) + '" placeholder="例如：深蹲" autocomplete="off"></div>'
+      + '<div class="form-group"><label class="form-label">肌群</label><select class="form-input" id="ex-group" style="appearance:auto">'
+      + MUSCLE_GROUPS.filter(g => g !== '全部').map(g => '<option value="' + g + '" ' + (g === group ? 'selected' : '') + '>' + g + '</option>').join('')
+      + '</select></div>'
+      + '</div>'
+      + '<div class="modal-actions">'
+      + '<button class="btn btn-outline" id="modal-cancel">取消</button>'
+      + '<button class="btn btn-primary" id="modal-save">保存</button>'
+      + '</div>'
+      + '</div>';
     overlay.classList.add('open');
 
-    // 用 setTimeout 确保 DOM 已渲染后再绑定事件
-    setTimeout(() => {
-      const cancelBtn = document.getElementById('modal-cancel');
-      const saveBtn = document.getElementById('modal-save');
-      if (cancelBtn) cancelBtn.onclick = () => TemplateView.closeModal();
-      if (saveBtn) saveBtn.onclick = () => this.saveExercise(editId || '');
-    }, 0);
+    document.getElementById('modal-cancel').onclick = function() { TemplateView.closeModal(); };
+    document.getElementById('modal-save').onclick = function() { ExerciseBrowser.saveExercise(editId || ''); };
+
+    // 设置手势关闭
+    setupModalDismiss(overlay);
   },
 
   async saveExercise(editId) {
-    const name = document.getElementById('ex-name').value.trim();
-    const group = document.getElementById('ex-group').value;
+    var name = document.getElementById('ex-name').value.trim();
+    var group = document.getElementById('ex-group').value;
     if (!name) { alert('请输入动作名称'); return; }
     if (editId) {
       await updateCustomExercise(editId, name, group);
