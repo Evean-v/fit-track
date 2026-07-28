@@ -1,6 +1,4 @@
-﻿);
-}
-// ===== Template 视图 =====
+﻿// ===== Template 视图 =====
 const TemplateView = {
   currentTab: 'templates',
   editingTemplate: null,
@@ -280,6 +278,7 @@ const ExerciseBrowser = {
     }
   }
 };
+
 
 
 
