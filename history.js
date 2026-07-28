@@ -175,7 +175,7 @@ const ProgressView = {
         <div class="list-item" onclick="ProgressView.showChart('${escHtml(ex.name)}', ${encodeURIComponent(JSON.stringify(ex.data))})">
           <div class="list-item-left">
             <div class="list-item-title">${escHtml(ex.name)}</div>
-            <div class="list-item-sub">${ex.data.length} 次记录 · 当前 ${latest.weight}kg</div>
+            <div class="list-item-sub">${ex.data.length} 次记录 · 当前 ${latest.weight || latest.speed}${latest.weight ? "kg" : ""}</div>
           </div>
           <div style="color:${changeColor};font-weight:500;font-size:15px">${changeStr}</div>
         </div>`;
@@ -218,7 +218,7 @@ const ProgressView = {
           ${data.map(d => `
             <div class="summary-row" style="padding:6px 4px;margin:0;border-bottom:1px solid var(--border);font-size:14px">
               <span style="color:var(--text-secondary)">${formatDate(d.date)}</span>
-              <span style="font-weight:500">${d.weight}kg × ${d.reps} 次</span>
+              <span style="font-weight:500">${d.weight ? d.weight+"kg × "+d.reps+" 次" : "坡度"+d.grade+" · 速度"+d.speed+" · "+d.time+"分钟"}</span>
             </div>
           `).join('')}
         </div>
@@ -250,3 +250,5 @@ function formatDate(dateStr) {
   }
   return dateStr;
 }
+
+

@@ -18,7 +18,7 @@ const WorkoutView = {
     this.exercises = this.template.exercises.sort((a, b) => a.sortOrder - b.sortOrder).map(e => ({
       ...e,
       exercise: exMap[e.exerciseId] || { name: '未知动作', muscleGroup: '' },
-      sets: [{ weight: 0, reps: 0, completed: false, sortOrder: 0 }]
+      sets: [e.exercise && e.exercise.muscleGroup === '有氧' ? { grade: 0, speed: 0, time: 0, completed: false, sortOrder: 0 } : { weight: 0, reps: 0, completed: false, sortOrder: 0 }]
     }));
     this.currentExIdx = 0;
     this.session = {
@@ -106,7 +106,24 @@ const WorkoutView = {
           <span class="badge badge-sm">${escHtml(ex.exercise ? ex.exercise.muscleGroup : '')}</span>
         </div>
         <div id="wo-sets">
-          ${sessionEx.sets.map((s, i) => `
+          ${sessionEx.sets.map((s, i) => {
+            const isCardio = ex.exercise && ex.exercise.muscleGroup === '有氧';
+            if (isCardio) {
+              return `
+            <div class="workout-set-row">
+              <div class="set-number ${s.completed ? 'done' : ''}">${i + 1}</div>
+              <input class="set-input" type="number" min="0" step="0.5" value="${s.grade || ''}" placeholder="坡度" onchange="WorkoutView.updateSet(${i}, 'grade', this.value)" onfocus="this.select()" style="width:55px">
+              <span style="color:var(--text-secondary);font-size:12px">坡度</span>
+              <input class="set-input" type="number" min="0" step="0.1" value="${s.speed || ''}" placeholder="速度" onchange="WorkoutView.updateSet(${i}, 'speed', this.value)" onfocus="this.select()" style="width:55px">
+              <span style="color:var(--text-secondary);font-size:12px">速度</span>
+              <input class="set-input" type="number" min="0" step="0.5" value="${s.time || ''}" placeholder="时间" onchange="WorkoutView.updateSet(${i}, 'time', this.value)" onfocus="this.select()" style="width:55px">
+              <span style="color:var(--text-secondary);font-size:12px">分钟</span>
+              <button class="set-check ${s.completed ? 'done' : ''}" onclick="WorkoutView.toggleSet(${i})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </div>`;
+            } else {
+              return `
             <div class="workout-set-row">
               <div class="set-number ${s.completed ? 'done' : ''}">${i + 1}</div>
               <input class="set-input" type="number" min="0" step="0.5" value="${s.weight || ''}" placeholder="重量" onchange="WorkoutView.updateSet(${i}, 'weight', this.value)" onfocus="this.select()">
@@ -116,8 +133,9 @@ const WorkoutView = {
               <button class="set-check ${s.completed ? 'done' : ''}" onclick="WorkoutView.toggleSet(${i})">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </button>
-            </div>
-          `).join('')}
+            </div>`;
+            }
+          }).join('')}
         </div>
         <div style="padding:10px 16px;display:flex;gap:10px">
           <button class="btn btn-sm btn-outline" onclick="WorkoutView.addSet()">+ 加组</button>
@@ -243,3 +261,4 @@ const WorkoutView = {
     App.navigate('train');
   }
 };
+

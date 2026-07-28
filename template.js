@@ -1,8 +1,4 @@
-﻿// ===== 弹窗：点击遮罩背景关闭 =====
-function setupModalDismiss(overlay) {
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) TemplateView.closeModal();
-  });
+﻿);
 }
 // ===== Template 视图 =====
 const TemplateView = {
@@ -114,7 +110,6 @@ const TemplateView = {
     document.getElementById('modal-save').onclick = () => this.saveTemplate();
 
     // 设置手势关闭
-    setupModalDismiss(overlay);
 
     this.renderExercisesSelector();
   },
@@ -263,7 +258,6 @@ const ExerciseBrowser = {
     document.getElementById('modal-save').onclick = function() { ExerciseBrowser.saveExercise(editId || ''); };
 
     // 设置手势关闭
-    setupModalDismiss(overlay);
   },
 
   async saveExercise(editId) {
@@ -286,6 +280,7 @@ const ExerciseBrowser = {
     }
   }
 };
+
 
 
 
