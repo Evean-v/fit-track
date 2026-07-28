@@ -106,8 +106,8 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
   background: none;
   border: none;
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: color 0.15s;
 }
 .tab-item.active { color: var(--primary); }
@@ -176,7 +176,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
   touch-action: manipulation;
 }
 
-.form-group { margin-bottom: 16px; }
+.form-group { margin-bottom: 14px; }
 .form-label {
   display: block; font-size: 14px; font-weight: 500;
   color: var(--text-secondary); margin-bottom: 6px;
@@ -256,12 +256,9 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 .timer-display { font-size: 56px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
 .timer-label { font-size: 14px; color: var(--text-secondary); }
 .timer-controls { display: flex; gap: 16px; margin-top: 24px; }
-.timer-controls .btn { touch-action: manipulation; }
 
 .chart-container { padding: 16px; background: var(--card); border-radius: var(--radius); margin: 16px; }
-.chart-bar {
-  display: flex; align-items: flex-end; gap: 4px; height: 180px;
-}
+.chart-bar { display: flex; align-items: flex-end; gap: 4px; height: 180px; }
 .bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .bar-fill { width: 100%; border-radius: 4px 4px 0 0; background: var(--primary); min-height: 4px; }
 .bar-label { font-size: 10px; color: var(--text-secondary); }
@@ -288,7 +285,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 .summary-row .label { color: var(--text-secondary); }
 .summary-row .value { font-weight: 500; }
 
-/* Modal backdrop click to close */
+/* === 弹窗：按钮固定底部 === */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.4);
@@ -306,19 +303,34 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
   width: 100%;
   max-width: 400px;
   max-height: 80vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
+  padding-bottom: 16px;
 }
 .modal-title {
   font-size: 18px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   text-align: center;
+  flex-shrink: 0;
+}
+.modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.modal-body-no-scroll {
+  flex-shrink: 0;
 }
 .modal-actions {
   display: flex;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 14px;
+  flex-shrink: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 .modal-actions .btn { flex: 1; }
 

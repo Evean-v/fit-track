@@ -21,10 +21,9 @@ const TemplateView = {
       </div>
       <div class="main" id="template-content"></div>
     `;
-    // 绑定事件（替代 inline onclick）
-    document.getElementById('btn-create-template').addEventListener('click', () => TemplateView.showCreateModal());
+    document.getElementById('btn-create-template').addEventListener('click', () => this.showCreateModal());
     document.querySelectorAll('#template-tabs .filter-tab').forEach(btn => {
-      btn.addEventListener('click', () => TemplateView.switchTab(btn.dataset.tab));
+      btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
     });
     this.renderTemplates();
   },
@@ -60,15 +59,14 @@ const TemplateView = {
       </div>
     `).join('') + '</div>';
 
-    // 绑定事件
     el.querySelectorAll('.list-item').forEach(item => {
-      item.addEventListener('click', () => TemplateView.startWorkout(item.dataset.tplId));
+      item.addEventListener('click', () => this.startWorkout(item.dataset.tplId));
     });
     el.querySelectorAll('.btn-edit-tpl').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); TemplateView.editTemplate(btn.dataset.tplId); });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); this.editTemplate(btn.dataset.tplId); });
     });
     el.querySelectorAll('.btn-del-tpl').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); TemplateView.confirmDelete(btn.dataset.tplId); });
+      btn.addEventListener('click', (e) => { e.stopPropagation(); this.confirmDelete(btn.dataset.tplId); });
     });
   },
 
@@ -89,13 +87,15 @@ const TemplateView = {
     overlay.innerHTML = `
       <div class="modal">
         <div class="modal-title">${escHtml(title)}</div>
-        <div class="form-group">
-          <label class="form-label">模版名称</label>
-          <input class="form-input" id="tpl-name" value="${escHtml(name)}" placeholder="例如：推拉腿" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label class="form-label">选择动作</label>
-          <div id="tpl-exercise-list" style="max-height:300px;overflow-y:auto"></div>
+        <div class="modal-body" id="modal-body">
+          <div class="form-group">
+            <label class="form-label">模版名称</label>
+            <input class="form-input" id="tpl-name" value="${escHtml(name)}" placeholder="例如：推拉腿" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label">选择动作</label>
+            <div id="tpl-exercise-list"></div>
+          </div>
         </div>
         <div class="modal-actions">
           <button class="btn btn-outline" id="modal-cancel">取消</button>
@@ -104,7 +104,6 @@ const TemplateView = {
       </div>`;
     overlay.classList.add('open');
 
-    // 用 addEventListener 绑定（比 inline onclick 更可靠）
     document.getElementById('modal-cancel').addEventListener('click', () => this.closeModal());
     document.getElementById('modal-save').addEventListener('click', () => this.saveTemplate());
     this.renderExercisesSelector();
@@ -127,13 +126,12 @@ const TemplateView = {
     if (all.length === 0) { el.innerHTML = '<p style="color:var(--text-secondary);padding:8px;">暂无动作，请先在动作库中添加</p>'; return; }
     el.innerHTML = all.map(ex => {
       const checked = this.selectedExercises.has(ex.id) ? 'checked' : '';
-      return `<label style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border);cursor:pointer;">
+      return `<label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--border);cursor:pointer;">
         <input type="checkbox" ${checked} value="${ex.id}" style="width:18px;height:18px;accent-color:var(--primary)">
-        <span style="flex:1">${escHtml(ex.name)}</span>
+        <span style="flex:1;font-size:14px">${escHtml(ex.name)}</span>
         <span class="badge badge-sm">${escHtml(ex.muscleGroup)}</span>
       </label>`;
     }).join('');
-    // 绑定 checkbox 事件
     el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
       cb.addEventListener('change', () => {
         if (cb.checked) this.selectedExercises.add(cb.value);
@@ -170,7 +168,7 @@ const TemplateView = {
   }
 };
 
-// ===== Exercise Browser (动作库) =====
+// ===== Exercise Browser =====
 const ExerciseBrowser = {
   currentGroup: '全部',
 
@@ -182,7 +180,6 @@ const ExerciseBrowser = {
       </div>
       <div id="ex-list" style="flex:1;overflow-y:auto"></div>
     `;
-    // 绑定筛选标签事件
     document.querySelectorAll('#ex-group-tabs .filter-tab').forEach(btn => {
       btn.addEventListener('click', () => this.filter(btn.dataset.group));
     });
@@ -216,7 +213,6 @@ const ExerciseBrowser = {
       </div>
     `).join('') + '</div>';
 
-    // 绑定编辑/删除事件
     el.querySelectorAll('.btn-edit-ex').forEach(btn => {
       btn.addEventListener('click', () => this.editCustom(btn.dataset.exId));
     });
@@ -224,13 +220,9 @@ const ExerciseBrowser = {
       btn.addEventListener('click', () => this.deleteCustom(btn.dataset.exId));
     });
 
-    // 底部添加动作按钮
     const addBtn = document.createElement('div');
     addBtn.style.cssText = 'padding:0 16px 16px';
-    addBtn.innerHTML = `<button class="btn btn-block btn-outline btn-lg" id="btn-add-exercise">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      添加自定义动作
-    </button>`;
+    addBtn.innerHTML = '<button class="btn btn-block btn-outline btn-lg" id="btn-add-exercise"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 添加自定义动作</button>';
     el.appendChild(addBtn);
     document.getElementById('btn-add-exercise').addEventListener('click', () => this.showAddForm());
   },
@@ -250,15 +242,17 @@ const ExerciseBrowser = {
     overlay.innerHTML = `
       <div class="modal">
         <div class="modal-title">${escHtml(title)}</div>
-        <div class="form-group">
-          <label class="form-label">动作名称</label>
-          <input class="form-input" id="ex-name" value="${escHtml(name)}" placeholder="例如：深蹲" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label class="form-label">肌群</label>
-          <select class="form-input" id="ex-group" style="appearance:auto">
-            ${MUSCLE_GROUPS.filter(g => g !== '全部').map(g => `<option value="${g}" ${g === group ? 'selected' : ''}>${g}</option>`).join('')}
-          </select>
+        <div class="modal-body" id="modal-body">
+          <div class="form-group">
+            <label class="form-label">动作名称</label>
+            <input class="form-input" id="ex-name" value="${escHtml(name)}" placeholder="例如：深蹲" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label">肌群</label>
+            <select class="form-input" id="ex-group" style="appearance:auto">
+              ${MUSCLE_GROUPS.filter(g => g !== '全部').map(g => `<option value="${g}" ${g === group ? 'selected' : ''}>${g}</option>`).join('')}
+            </select>
+          </div>
         </div>
         <div class="modal-actions">
           <button class="btn btn-outline" id="modal-cancel">取消</button>
@@ -267,8 +261,13 @@ const ExerciseBrowser = {
       </div>`;
     overlay.classList.add('open');
 
-    document.getElementById('modal-cancel').addEventListener('click', () => TemplateView.closeModal());
-    document.getElementById('modal-save').addEventListener('click', () => this.saveExercise(editId || ''));
+    // 用 setTimeout 确保 DOM 已渲染后再绑定事件
+    setTimeout(() => {
+      const cancelBtn = document.getElementById('modal-cancel');
+      const saveBtn = document.getElementById('modal-save');
+      if (cancelBtn) cancelBtn.onclick = () => TemplateView.closeModal();
+      if (saveBtn) saveBtn.onclick = () => this.saveExercise(editId || '');
+    }, 0);
   },
 
   async saveExercise(editId) {
