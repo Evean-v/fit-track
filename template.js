@@ -1,42 +1,39 @@
-﻿// ===== 弹窗手势关闭（上下滑动 + 点击遮罩） =====
+﻿// ===== 弹窗手势关闭（左右滑动 + 点击遮罩） =====
 function setupModalDismiss(overlay) {
-  let startY = 0, isDragging = false, modal = null;
+  let startX = 0, isDragging = false, modal = null;
 
-  // 点击遮罩背景关闭
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) TemplateView.closeModal();
   });
 
-  // 触摸开始
   overlay.addEventListener('touchstart', (e) => {
     modal = overlay.querySelector('.modal');
     if (!modal) return;
-    startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
     isDragging = true;
     modal.style.transition = 'none';
     modal.style.willChange = 'transform, opacity';
   }, { passive: true });
 
-  // 触摸滑动
+  
   overlay.addEventListener('touchmove', (e) => {
     if (!isDragging || !modal) return;
-    const deltaY = e.touches[0].clientY - startY;
-    const translateY = deltaY > 0 ? deltaY * 0.4 : deltaY * 0.5;
-    modal.style.transform = 'translateY(' + translateY + 'px)';
-    modal.style.opacity = Math.max(0.3, 1 - Math.abs(deltaY) / 300);
+    const deltaX = e.touches[0].clientX - startX;
+    const translateX = deltaX > 0 ? deltaX * 0.4 : deltaX * 0.5;
+    modal.style.transform = 'translateX(' + translateX + 'px)';
+    modal.style.opacity = Math.max(0.3, 1 - Math.abs(deltaX) / 300);
   }, { passive: true });
 
-  // 触摸结束
+  
   overlay.addEventListener('touchend', (e) => {
     if (!isDragging || !modal) return;
     isDragging = false;
-    const deltaY = e.changedTouches[0].clientY - startY;
+    const deltaX = e.changedTouches[0].clientX - startX;
     modal.style.willChange = '';
     modal.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
 
-    if (Math.abs(deltaY) > 80) {
-      // 超过阈值，关闭弹窗
-      modal.style.transform = deltaY > 0 ? 'translateY(100%)' : 'translateY(-100%)';
+    if (Math.abs(deltaX) > 80) {
+      modal.style.transform = deltaX > 0 ? 'translateX(100%)' : 'translateX(-100%)';
       modal.style.opacity = '0';
       setTimeout(() => {
         TemplateView.closeModal();
@@ -46,7 +43,7 @@ function setupModalDismiss(overlay) {
       }, 200);
     } else {
       // 未超过阈值，弹回原位
-      modal.style.transform = 'translateY(0)';
+      modal.style.transform = 'translateX(0)';
       modal.style.opacity = '1';
       setTimeout(() => { modal.style.transform = ''; modal.style.opacity = ''; modal.style.transition = ''; }, 250);
     }
@@ -335,3 +332,6 @@ const ExerciseBrowser = {
     }
   }
 };
+
+
+
